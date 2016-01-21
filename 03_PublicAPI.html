@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Navigation</title>
+
+
+	<link rel="stylesheet" href="./bower_components/bootstrap/dist/css/bootstrap.css">
+	<script src="./bower_components/jquery/dist/jquery.min.js"></script>
+
+	<style media="screen">
+		*{
+			margin: 0;
+			padding: 0;
+		}
+
+		body{
+			text-align: center;
+			/*background-color: red;*/
+		}
+
+		#playListTable{
+			width: 50%;
+			margin: 20px auto;
+		}
+
+		img{
+			width: 100px;
+			height: 100px
+		}
+
+		.form{
+			position: relative;
+			display: none;
+			text-align: left;
+			width: 500px;
+			border: 2px solid #66CCFF;
+			border-radius: 5px;
+			background-color: #CCFFFF;
+			padding: 10px;
+			text-transform: capitalize;
+			top: 20px;
+		}
+
+		#edit-Table-Fields-Form {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100vh;
+			/*background-color: gray;*/
+			/*background-color: rgba(128,128,128,0.5);*/
+			text-align: center;
+			z-index: -100;
+			display: inline-block;
+		}
+
+	</style>
+</head>
+<body>
+
+	<section id="table-section">
+	</section>
+
+	<section id="edit-Table-Fields-Form">
+	</section>
+
+	<!--
+			La petición de datos entre páginas de dirente servidores es restringida, para poder accesar a la informacion
+			es necesario hacer un ajax request con la propiedad "datatype = JasonP" lo que envuelve la respuesta del REstful
+			API en una función, dicha función tiene que ser definida en nuestro código para nosotros tener el control
+			de lo que esta hace y no algo malicioso.
+			http://stackoverflow.com/questions/2067472/what-is-jsonp-all-about
+	-->
+	<template id="edit-form-template">
+		<form class="form" action="index.html" method="post" style="background-color: #3366FF;">
+			<section id="edit-form-picture" style="float: left; border: 1px solid gray; border-radius: 5px;">
+				<img src="" alt="No Image" />
+			</section>
+			<section id="edit-form-inputs" style="float: left; border: 1px solid black; border-radius: 5px; padding: 0 10px; width: 360px; margin-left: 10px; background-color: white;">
+			</section>
+
+			<section id="edit-form-buttons" style="clear: both; padding-top: 5px">
+				<button type="button" id="btnClose" class="btn btn-default">Close</button>
+				<button type="button" id="btnSubmit" class="btn btn-default">Submit</button>
+			</section>
+
+		</form>
+	</template>
+
+	<script type="text/javascript">
+
+	function MyEditForm(headers){
+		var editTableFieldsForm = $("#edit-Table-Fields-Form");
+		var mainTemplateDiv = $("<div/>").html($("#edit-form-template").html());
+
+		var initialize = (function(){
+			var div;
+			var label;
+			var input;
+
+			var setImage = (function(){
+				// img = $('<img/>');
+				// img.attr("src", "http://ichef.live.bbci.co.uk/images/ic/512x512/p039ff96.jpg");
+				// $('#edit-form-picture', mainTemplateDiv).append(img);
+			})();
+
+			var setInputElements = (function(){
+				for (var header in headers){
+					if (header === "image") continue;
+					div = $('<div/>');
+					label = $('<label/>');
+					input = $('<input/>');
+
+					div.attr("class", "form-group");
+					label.attr({
+						for: "editInput" + header,
+					});
+					label.text(header);
+					input.attr({
+						type: "text",
+						name: "editInput" + header,
+						class: "form-control",
+						id: "editInput" + header,
+						placeholder: header,
+						required: "required"
+					});
+					div.append(label);
+					div.append(input);
+					$('#edit-form-inputs', mainTemplateDiv).append(div);
+				}
+
+				var insertTemplate = (function(){
+					$("#edit-Table-Fields-Form").append(mainTemplateDiv);
+				})();
+			})();
+
+			$("#edit-Table-Fields-Form #btnClose").on("click", function(event){
+				event.preventDefault();
+				myEditForm.close();
+			});
+
+			$("#edit-Table-Fields-Form #btnSubmit").on("click", function(event){
+				// para serealizar los inputs deben tener name
+				var data = $("#edit-Table-Fields-Form form").serializeArray();
+				console.log(data);
+				$.post("index.html", data);
+			});
+		})();
+
+		this.open = function(data){
+			var setCSSProperties = (function(){
+				$("#edit-Table-Fields-Form").css({
+					"z-index": 100,
+					"background-color": "rgba(128,128,128,0.5)",
+					"top": $('body').scrollTop()
+				});
+				$("#edit-Table-Fields-Form form").css({
+					"display": "inline-block"
+				});
+				$("body").css("overflow", "hidden");
+			})();
+
+			var setInputData = (function(){
+				for (var header in data)
+					if (header === "image"){
+						$("#edit-form-picture").html(data[header]);
+					} else {
+						$("#editInput" + header).val(data[header]);
+					}
+			})();
+		}
+		this.close = function(){
+			var setCSSProperties = (function(){
+				$("#edit-Table-Fields-Form").css({
+					"z-index": -100,
+					"background-color": "white"
+				});
+				$("#edit-Table-Fields-Form form").css({
+					"display": "none",
+				});
+				$("body").css("overflow", "auto");
+			})();
+		}
+
+		this.submit = function(){
+			var setCSSProperties = (function(){
+				$("#edit-Table-Fields-Form").css({
+					"z-index": -100,
+					"background-color": "white"
+				});
+				$("#edit-Table-Fields-Form form").css({
+					"display": "none",
+				});
+			})();
+		}
+	}
+	var myTable;
+	var myEditForm;
+
+	$(function() {
+  	$.get('https://jsonp.afeld.me/?callback=onLoad&url=http://www.bbc.co.uk/radio1/playlist.json');
+	});
+
+	function onLoad(data) {
+		myTable = new CustomTable("playListTable", data)
+		myEditForm = new MyEditForm(myTable.headers);
+	}
+
+	function CustomTable(tableId, data){
+		// private proerties
+		var parentElement = "table-section";
+
+		// public propeties
+		this.table;
+		this.data = data;
+		this.headers = getTableHeaders();
+
+		// private utility functions
+		var TH = (function(){
+			var td = $('<th>');
+			return function(el){
+				return th.clone().append(el);
+			};
+		})();
+
+		var TR = (function(){
+			var row = $('<tr>');
+			return function(){
+				return row.clone();
+			};
+		})();
+
+		var TD = (function(){
+			var td = $('<td>');
+			return function(el){
+				return td.clone().append(el);
+			};
+		})();
+
+		var Img = (function(){
+			var img = $('<img>');
+			return function(src){
+				return img.clone().prop(
+				{
+					'src':src,
+					'alt':'pic'
+				});
+			};
+		 })();
+
+		var Link = (function(){
+			var a = $('<a>');
+			return function(href,text){
+				return a.clone()
+					.prop({href: href})
+					.append(text);
+				};
+		})();
+
+		function getTableHeaders(){
+			return data.playlist[Object.keys(data.playlist)[0]][0];
+		}
+
+		this.getRowData = function(tr){
+			var obj = {}
+
+			for (var i = 1; i < tr[0].childNodes.length - 1; i++){
+				obj[Object.keys(this.headers)[i-1]] = tr[0].childNodes[i].innerHTML;
+			}
+			return obj;
+		}
+
+		var self = this;
+		// private initializer
+		var initialize = (function(){
+
+			self.table = (function(){
+				var table = $('<table>');
+				table.attr("id", tableId);
+				table.addClass("table table-bordered table-striped");
+				$("#"+parentElement).append(table);
+				return table;
+			})();
+
+			var setTableHeader = (function(){
+				var fragment = $(document.createDocumentFragment());
+
+				$("#"+tableId).append("<thead></thead>");
+				$("#"+tableId + " thead").append("<tr></tr>")
+
+				fragment.append(TD("No."));
+				for (var header in self.headers)
+					fragment.append(TD(header));
+				fragment.append(TD("action"));
+
+				$("#"+tableId + " thead tr").append(fragment);
+			})();
+
+			var setTableBody = (function(){
+				var trs;
+				var cont = 1;
+				var tbody = $('<tbody>');
+
+				$("#"+tableId).append(tbody);
+
+				for (var property in data.playlist){
+					var theArray = data.playlist[property];
+					// filling table rows
+					for (var i = 0; i < theArray.length; i++){
+						trs =  TR().append(TD(cont++));
+						// filling table data
+						for (var aProperty in theArray[i]){
+							if (aProperty === "image"){
+								trs.append(TD(Img(theArray[i][aProperty])));
+							} else {
+								trs.append(TD(theArray[i][aProperty]));
+							}
+						}
+						trs.append(TD(Link('javascript:void(0);', 'edit')));
+
+						tbody.append(trs);
+						if (cont > 10) return;
+					}
+				}
+			})();
+
+			// si pones este evento afuera de la clase, el evento se le asigna a un elemento que no ha
+			// sido creado, aguas!
+			$('#playListTable').on("click", "a", function(e){
+				var rowData = myTable.getRowData($(this.parentNode.parentNode));
+				myEditForm.open(rowData);
+				//window.location  = 'http://www.yahoo.com';
+			});
+		})();
+	}
+
+	</script>
+</body>
+</html>
+
+<!-- // function GetAPIInfo(){
+// 	$.ajax({
+// 			type: "GET",
+// 			url: "http://www.bbc.co.uk/radio1/playlist.json?call",
+// 			jsonp: "callback",
+// 			// contentType: "application/json; charset=utf-8",
+// 			// contentType: "text/json; charset=utf-8",
+// 			dataType: "jsonp",
+// 			success: function(){
+// 				console.log("success");
+// 			},
+// 			error: function(xhr){
+// 				console.log("El Error: ", xhr);
+// 			}
+// 	});
+// }
+
+// GetAPIInfo(); -->

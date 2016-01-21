@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Navigation</title>
+	<script src="./bower_components/jquery/dist/jquery.min.js"></script>
+	<style media="screen">
+		*{
+			margin: 0;
+			padding: 0;
+		}
+
+		body{
+			margin: 2em 0;
+			text-align: center;
+		}
+		nav{
+			margin: 0 auto;
+			height: 3em;
+			background-color: #3300CC;
+			width: 80%;
+			border: 1px solid blue;
+			border-radius: 5px;
+		}
+
+		ul li {
+			text-decoration: none;
+			display: inline-block;
+			border: 1px solid black;
+			background-color: #3399FF;
+		}
+
+		/* display block hace que todo el espacio del link funcion como link, y no solo el texto*/
+		ul li a {
+			display: block;
+			text-decoration: none;
+			line-height: 3em;
+			padding: 0 10px;
+			transition: 0.2s ease-out;
+		}
+
+		ul li a:hover{
+			background-color: red;
+		}
+
+		.active{
+			background-color: yellow;
+		}
+
+		section {
+			width: 300px;
+			height: 200px;
+			background: yellow;
+			border: 1px solid black;
+			border-radius: 5px;
+			margin: 0 auto;
+			display: none;
+		}
+
+		.show-section {
+			display: block;
+		}
+
+	</style>
+</head>
+<body>
+	<nav>
+		<ul>
+			<li><a href="#section-one">link 1</a></li>
+			<li><a href="#section-two">link 2</a></li>
+		</ul>
+	</nav>
+
+	<div>
+		<section id="section-one">
+			Link 1 Content
+		</section>
+		<section id="section-two">
+			Link 2 Content
+		</section>
+	</div>
+
+	<script type="text/javascript">
+		'use strict';
+		$("div").append("hola");
+
+		var previous;
+		var previousLink;
+		$("nav").on("click", "a", function(event){
+			event.preventDefault();
+			var link = $(this);
+
+			// Quitar clases a previous
+			if (previousLink)
+				previousLink.removeClass("active");
+			$(previous).css({'display': 'none'});
+
+			// Poner clases a actives
+			var activeSection = link.attr('href');
+			$(activeSection).css({'display': 'block'});
+			link.addClass('active');
+
+			// Guardar referencias a previous
+			previous = activeSection;
+			previousLink = link;
+		});
+
+
+
+	</script>
+</body>
+</html>
